@@ -1,6 +1,7 @@
 name: Image build and publish (debug)
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [ "feature/v2-poc-fasrc", "main" ]
   push:
