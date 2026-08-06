@@ -1,4 +1,4 @@
-name: Image build and publish
+name: Image build and publish (debug)
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
 
     env:
       REGISTRY: ghcr.io
-      IMAGE_NAME: fasrc/coldfrontv2
+      IMAGE_NAME: fasrc/coldfront-v2
 
     steps:
       - name: Check out the code
