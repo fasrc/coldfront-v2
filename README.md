@@ -8,7 +8,7 @@ ColdFront is an open source resource and allocation management system designed t
 
 ## WARNING UNDER HEAVY DEVELOPMENT
 
-This is the development version of FASRC ColdFront currently undergoing heavy development. This is not ready for production use. If you'd like to test out the next version, here's how to get started:
+This is the development version of ColdFront currently undergoing heavy development. This is not ready for production use. If you'd like to test out the next version, here's how to get started:
 
 
 From new database:
