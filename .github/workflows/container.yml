@@ -1,6 +1,8 @@
 name: Image build and publish (debug)
 
 on:
+  pull_request:
+    branches: [ "feature/v2-poc-fasrc" ]
   push:
     branches: [ "feature/v2-poc-fasrc" ]
 
