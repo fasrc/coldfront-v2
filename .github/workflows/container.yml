@@ -1,10 +1,8 @@
 name: Image build and publish (debug)
 
 on:
-  pull_request:
-    branches: [ "feature/v2-poc-fasrc", "main" ]
   push:
-    branches: [ "feature/v2-poc-fasrc", "main" ]
+    branches: [ "feature/v2-poc-fasrc" ]
 
 jobs:
   build-and-push:
@@ -22,8 +20,7 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v4
         with:
-          submodules: recursive
-          token: ${{ secrets.GIT_HTTPS_TOKEN }}
+          ref: "feature/v2-poc-fasrc"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
