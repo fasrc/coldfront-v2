@@ -2,10 +2,8 @@ name: Image build and publish (debug)
 
 on:
   workflow_dispatch:
-  pull_request:
-    branches: [ "feature/v2-poc-fasrc", "main" ]
   push:
-    branches: [ "feature/v2-poc-fasrc", "main" ]
+    branches: [ "feature/v2-poc-fasrc" ]
 
 jobs:
   build-and-push:
@@ -22,6 +20,7 @@ jobs:
     steps:
       - name: Check out the code
         uses: actions/checkout@v4
+        ref: "feature/v2-poc-fasrc"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
