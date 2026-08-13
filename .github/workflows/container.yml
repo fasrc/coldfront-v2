@@ -21,7 +21,7 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v4
         with:
-          ref: "feature/v2-poc-fasrc"
+          ref: "dev/2.0.x-fasrc"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
