@@ -6,6 +6,7 @@ RUN apt update && DEBIAN_FRONTEND=noninteractive apt install -y --no-install-rec
         sqlite3 \
         freeipa-client \
         mariadb-client \
+        git \
         postgresql-client
 
 FROM cfimage AS builder
