@@ -3,7 +3,7 @@ name: Image build and publish (debug)
 on:
   workflow_dispatch:
   push:
-    branches: [ "feature/v2-poc-fasrc" ]
+    branches: [ "dev/2.0.x-fasrc" ]
 
 jobs:
   build-and-push:
