@@ -32,6 +32,7 @@ ENV UV_PYTHON_PREFERENCE=only-managed
 
 WORKDIR /app
 
+
 # Install Python before the project for caching
 RUN --mount=type=bind,source=.python-version,target=.python-version \
   uv python install
@@ -46,6 +47,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --no-dev \
         --extra ldap \
         --extra freeipa \
+        --extra initializer \
         --extra mysql \
         --extra pg
 COPY . /app
@@ -55,9 +57,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --no-dev \
         --extra ldap \
         --extra freeipa \
+        --extra initializer \
         --extra mysql \
         --extra pg
-
 
 FROM cfimage
 
