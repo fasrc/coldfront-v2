@@ -46,7 +46,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --no-dev \
         --extra ldap \
         --extra freeipa \
-        --extra iquota \
         --extra oidc \
         --extra mysql \
         --extra pg
@@ -57,7 +56,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --no-dev \
         --extra ldap \
         --extra freeipa \
-        --extra iquota \
         --extra oidc \
         --extra mysql \
         --extra pg
