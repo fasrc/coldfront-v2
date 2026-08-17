@@ -54,6 +54,7 @@ dependencies = [
     "django-money>=3.6.1",
     # FASRC
     "whitenoise",
+    "django-prometheus",
 ]
 
 [project.urls]
