@@ -38,6 +38,7 @@ ALLOCATIONS_MENU = Menu(
             items=(
                 get_model_item("ras", "project", _("Projects")),
                 get_model_item("ras", "projectuser", _("Project Users")),
+                get_model_item("ras", "projectinvite", _("Invites")),
                 get_model_item("ris", "publication", _("Publications")),
                 get_model_item("ris", "funding", _("Funding")),
             ),
@@ -143,6 +144,26 @@ ADMIN_MENU = Menu(
 )
 
 
+BILLING_MENU = Menu(
+    label=_("Billing"),
+    icon_class="fa-solid fa-receipt",
+    groups=(
+        MenuGroup(
+            label=_("Invoices"),
+            items=(get_model_item("billing", "invoice", _("Invoices")),),
+        ),
+        MenuGroup(
+            label=_("Pricing"),
+            items=(
+                get_model_item("billing", "rate", _("Rates")),
+                get_model_item("billing", "freeallowance", _("Free Allowances")),
+                get_model_item("billing", "discount", _("Discounts")),
+            ),
+        ),
+    ),
+)
+
+
 @cache
 def get_menus():
     """
@@ -155,6 +176,7 @@ def get_menus():
         RESOURCES_MENU,
         ORGANIZATION_MENU,
         CUSTOMIZATION_MENU,
+        BILLING_MENU,
     ]
 
     # Add top-level plugin menus

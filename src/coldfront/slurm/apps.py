@@ -17,6 +17,7 @@ class SlurmConfig(AppConfig):
         register_models(*self.get_models())
 
         from . import (
+            billing,  # noqa: F401
             listeners,  # noqa: F401
             views,  # noqa: F401
         )
