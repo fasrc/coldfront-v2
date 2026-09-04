@@ -7,11 +7,9 @@ from coldfront.registry import register_billing_source
 from coldfront.storage.models import StorageQuota, StorageResource
 
 
-def _storage_quota_billable(user=None, project=None):
+def _storage_quota_billable(user):
     qs = StorageQuota.objects.filter(allocation__status=AllocationStatusChoices.STATUS_ACTIVE)
-    if project is not None:
-        qs = qs.filter(allocation__project=project)
-    elif user is not None:
+    if user is not None:
         qs = qs.filter(allocation__project__owner=user)
     return qs
 
@@ -20,7 +18,9 @@ def _storage_quota_rate_scope(source):
     return source.storage
 
 
-def _storage_quota_quantity(source):
+def _storage_quota_quantity(source, invoice):
+    # Grant-based (additive): bill the hard limit regardless of the invoice
+    # period. The invoice arg is accepted for the shared get_quantity contract.
     return source.hard_limit_bytes
 
 

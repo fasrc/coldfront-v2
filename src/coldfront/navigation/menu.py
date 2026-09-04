@@ -48,7 +48,7 @@ ALLOCATIONS_MENU = Menu(
             items=(
                 get_model_item("ras", "allocation", _("Allocations")),
                 get_model_item("ras", "allocationchangerequest", _("Change Requests"), actions=("add",)),
-                get_model_item("core", "commententry", _("Comment Entires"), actions=[]),
+                get_model_item("core", "commententry", _("Comment Entries"), actions=[]),
             ),
         ),
     ),
@@ -74,6 +74,7 @@ RESOURCES_MENU = Menu(
                 get_model_item("slurm", "slurmuser", _("Slurm Users")),
                 get_model_item("slurm", "slurmassociation", _("Associations")),
                 get_model_item("slurm", "slurmqos", _("QOS")),
+                get_model_item("slurm", "slurmaccountusage", _("Usage"), actions=()),
             ),
         ),
         MenuGroup(

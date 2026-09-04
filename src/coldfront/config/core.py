@@ -14,6 +14,8 @@ from coldfront.config.env import ENV
 # General Center Information
 # ------------------------------------------------------------------------------
 CENTER_NAME = ENV.str("CENTER_NAME", default="HPC Center")
+CENTER_ADDRESS = ENV.str("CENTER_ADDRESS", default="")
+CENTER_PHONE = ENV.str("CENTER_PHONE", default="")
 CENTER_HELP_URL = ENV.str("CENTER_HELP_URL", default="")
 SUPPORT_EMAIL = ENV.str("SUPPORT_EMAIL", default="")
 
@@ -51,6 +53,15 @@ FILTERS_NULL_CHOICE_LABEL = "None"
 FILTERS_NULL_CHOICE_VALUE = "null"
 ALLOCATION_EXTENSION_REQUESTABLE_FIELDS = ENV.dict(
     "ALLOCATION_EXTENSION_REQUESTABLE_FIELDS",
+    cast={"value": tuple},
+    default={},
+)
+# Fields exposed only on the allocation change request form (not the
+# allocation request form).  Keyed by the fully-qualified class path, e.g.
+# "coldfront.slurm.models.SlurmAssociation".  Values may be plain field names
+# or related-object markers like "$related:<fk>.<field>".
+ALLOCATION_EXTENSION_CHANGEABLE_FIELDS = ENV.dict(
+    "ALLOCATION_EXTENSION_CHANGEABLE_FIELDS",
     cast={"value": tuple},
     default={},
 )

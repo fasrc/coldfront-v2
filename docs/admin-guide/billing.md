@@ -9,8 +9,9 @@ running the invoice workflow.
 ## How Billing Works (Background)
 
 Billing is **allocation-based**. For each billing period, ColdFront looks at
-every billable allocation a project holds, prices it against a **rate**, and
-collects the result into an **invoice**:
+every billable source on an allocation, prices it against a **rate**, and
+collects the result into an **invoice**, for example here's some default
+billable sources in ColdFront:
 
 - **Storage** — A `StorageQuota` is billed per terabyte (TB) of capacity at
   the storage resource's rate.
@@ -19,20 +20,36 @@ collects the result into an **invoice**:
 
 Two levers reduce the final amount:
 
-- **Free allowances** — A pool of free units granted to an owner (or to a
-  specific project). Allowances are stacked before any discount is applied.
-- **Discounts** — A percentage or flat reduction on the net total.
+- **Free allowances** — A pool of free units granted to an owner, scoped to a
+  resource. Allowances are stacked before any discount is applied.
+- **Discounts** — A percentage or flat reduction on the net total, scoped by
+  owner and/or resource.
 
-Every invoice is owned by a **responsible user** (the `owner`) and may be
-restricted to a subset of that owner's projects. If no projects are selected,
-all of the owner's projects are billed.
+Every invoice is owned by a **responsible user** (the `owner`). Generation
+considers all of the owner's billable sources, optionally restricted to
+specific billing source types (e.g. storage or compute); if no source types
+are selected, every billable source is billed.
 
 ---
 
 ## Setting Up Billing
 
-Billing needs three things before an invoice can be generated: rates, free
-allowances, and discounts.
+Billing needs two things before an invoice can be generated: billable sources
+and rates. Optionally free allowances and discounts can also be configured.
+
+### Billable Sources
+
+ColdFront's billing app prices allocations from **billing sources**. A billing
+source is a model whose instances represent something billable — for example a
+`StorageQuota` (billed per TB) or a `SlurmAccount` (billed per SU). Billable
+sources are registered using the `register_billing_source` method from the
+ColdFront registry. ColdFront comes with the following built-in sources:
+
+- `StorageQuota`, scoped to `StorageResource`, billing `hard_limit_bytes`.
+- `SlurmAccount` (scoped to `SlurmCluster`), billing `service_units`.
+- `SlurmQOS` (allows you to bill for access to a QOS).
+
+Plugins can also override these built-ins or register [custom billing sources](../plugins/billing.md).
 
 ### Rates
 
@@ -41,6 +58,7 @@ each resource you want to bill:
 
 | Field | Meaning |
 |---|---|
+| **Name** | Required, globally unique label for the rate |
 | **Scope** | The resource the rate applies to (a `StorageResource`, `SlurmCluster`, or `SlurmQOS`) |
 | **Unit** | Native units per billed unit — e.g. `1000000000000` (1.0 TB) for per-TB pricing |
 | **Unit format** | The billing dimension: `bytes`, `service_units`, `core_hours`, or `per_item` |
@@ -57,26 +75,35 @@ Rates are created under **Billing → Rates**.
 ### Free Allowances
 
 A **FreeAllowance** grants a pool of free units to an owner, scoped to a
-single resource:
+single resource (scope is required — there are no global allowances):
 
-- **Owner** — The user granted the free units.
+- **Name** — Required, globally unique label for the allowance.
+- **Owner** — The user granted the free units (required).
 - **Scope** — The resource the allowance applies to (required).
-- **Project** — Optional. If set, the allowance applies only to that owner's
-  charges within the project; otherwise it spans all of the owner's projects.
 - **Unit format** and **quantity total** — The dimension and total free units.
 
-Allowances are consumed once when an invoice is finalized; the `used` field
-tracks how much of the pool has been drawn down over time.
+Allowances are stacked with other allowances for the same owner, resource, and
+unit format, and are consumed once when an invoice is finalized; the `used`
+field tracks how much of the pool has been drawn down over time.
 
 ### Discounts
 
-A **Discount** reduces the net total after allowances:
+A **Discount** reduces the net total after allowances. It can be scoped by
+owner, by resource, both, or neither:
 
-- **Owner** — The user receiving the discount.
-- **Project** — Optional. A project-level discount is used when present;
-  otherwise the user-level discount applies.
-- **Type** — `percentage` (0-100) or `flat` (an amount).
+- **Name** — Required, globally unique label for the discount.
+- **Owner** — The user receiving the discount. Leave empty for a
+  resource-only or global discount.
+- **Scope** — The resource the discount applies to. Leave empty for an
+  owner-only or global discount.
+- **Type** — `percentage` (0-100), `flat` (an amount), or `no_cost` (zeroes
+  the invoice while still showing the underlying charges).
 - **Value** — The percentage or flat amount.
+
+For a given charge the **most specific** matching discount wins — owner +
+resource, then resource-only, then owner-only, then global — and discounts are
+never stacked. A global **No Cost** discount (`owner` and scope empty) reduces
+the grand total to zero while keeping the line items visible.
 
 ---
 
@@ -86,9 +113,8 @@ Invoices are created from **Billing → Invoices → Add**. The create form asks
 for only what generation needs:
 
 - **Slug**, **owner**, and an optional **description**
-- **Projects** — restrict billing to specific projects (empty = all of the
-  owner's projects)
-- **Source types** — restrict to specific billing source types (empty = all)
+- **Source types** — restrict to specific billing source types (empty = all
+  of the owner's billable sources)
 - **Period** — start date, end date, and due date
 
 On creation, ColdFront **automatically generates** the invoice: it prices
@@ -124,8 +150,9 @@ once invoiced; **Void** is available on drafts and invoiced invoices.
 ### Generating
 
 Click **Generate** to rebuild the invoice's line items and totals. Charges are
-priced at the scoped rate, free allowances are stacked (owner-level first,
-then project-level), and discounts are applied to the net total. Sources that
+priced at the scoped rate, free allowances are stacked (per owner, resource,
+and unit format), and a single discount is applied to each resource's net
+total (owner+resource > resource > owner > global precedence). Sources that
 were already billed in an overlapping, non-voided invoice period are skipped.
 
 ### Invoicing (Finalize)
@@ -149,8 +176,25 @@ billed and does not consume allowance pools.
 ## Exporting a PDF
 
 Every invoice has an **Export PDF** button on its detail page. It downloads a
-simple PDF with the invoice's line items (description, type, quantity, unit,
-unit price, amount) and totals.
+PDF with the invoice's line items (description, type, quantity, unit, unit
+price, amount), totals, and (when paid) payment details. The PDF is rendered 
+from the Django template `src/coldfront/templates/billing/pdf_invoice.html`.
+
+### Customizing the invoice PDF
+
+Sites override `billing/pdf_invoice.html` with their own template dir (see
+`SITE_TEMPLATES` / `TEMPLATES["DIRS"]`) exactly like any other page. The
+context is curated and includes:
+
+- `invoice` — the `Invoice` instance (use `{{ invoice.slug }}`, `{{ invoice.owner }}`,
+  `{{ invoice.get_status_display }}`, dates, and the Money totals).
+- `line_items` — the invoice's line items, pre-sorted by line type then id.
+- `status_paid` — the paid status value, for `{% if invoice.status == status_paid %}`.
+
+ColdFront currently uses [fpdf2](https://py-pdf.github.io/fpdf2/index.html) for
+PDF rendering which handles a limited HTML subset, keep overrides to plain
+headings, paragraphs, and `<table>`/`<tr>`/`<td>`/`<th>` markup — no CSS. For
+more information see [the fpdf2 HTML rendering docs](https://py-pdf.github.io/fpdf2/HTML.html).
 
 ---
 
@@ -186,5 +230,4 @@ producing a silent wrong bill. Correct the registration and generate again.
 ## Extending Billing
 
 The built-in sources bill `StorageQuota` per TB and `SlurmAccount` per SU.
-HPC centers with different metering can register their own billing sources
-through plugins. See [Billing Plugins](../plugins/billing.md).
+HPC centers can register their own billing sources through plugins. See [Billing Plugins](../plugins/billing.md).
